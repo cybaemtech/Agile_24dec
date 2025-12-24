@@ -21,12 +21,14 @@ function SimpleTeamCard({
   team, 
   creator, 
   projectCount,
-  currentUser 
+  currentUser,
+  users
 }: { 
   team: Team; 
   creator?: User; 
   projectCount: number; 
   currentUser?: User;
+  users: User[];
 }) {
   const { toast } = useToast();
   
@@ -56,12 +58,15 @@ function SimpleTeamCard({
   };
 
   // Extract user data from team members robustly
+  // Only include active users in memberUsers
   let memberUsers: User[] = [];
-  if (Array.isArray(teamMembers) && teamMembers.length > 0) {
-    memberUsers = teamMembers.map(member => member.user ? member.user : member).filter(Boolean);
+  if (Array.isArray(teamMembers) && users) {
+    memberUsers = teamMembers
+      .map((member) => users.find((u) => u.id === member.user_id))
+      .filter((user): user is User => !!user && user.isActive);
   }
   // Debug logging for member count issue
-  console.log(`TeamCard: team=${team.name} id=${team.id} teamMembers=`, teamMembers, 'memberUsers=', memberUsers, 'count=', memberUsers.length);
+  // console.log(`TeamCard: team=${team.name} id=${team.id} teamMembers=`, teamMembers, 'memberUsers=', memberUsers, 'count=', memberUsers.length);
 
   return (
     <TeamCard
@@ -337,6 +342,7 @@ export default function Teams() {
                       creator={creator}
                       projectCount={teamProjects.length}
                       currentUser={currentUser}
+                      users={users}
                     />
                   );
                 })}

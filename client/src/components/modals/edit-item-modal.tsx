@@ -62,14 +62,14 @@ const workItemFormSchema = z.object({
   message: "Estimate is required",
   path: ["estimate"],
 }).refine((data) => {
-  // Current Behavior and Expected Behavior are required for BUG types
-  if (data.type === 'BUG') {
+  // Current Behavior and Expected Behavior are required ONLY for DEFECT or PROD_INCIDENT bug types
+  if (data.type === 'BUG' && (data.bugType === 'DEFECT' || data.bugType === 'PROD_INCIDENT')) {
     return data.currentBehavior && data.currentBehavior.trim().length > 0 &&
            data.expectedBehavior && data.expectedBehavior.trim().length > 0;
   }
   return true;
 }, {
-  message: "Current Behavior and Expected Behavior are required for Bugs",
+  message: "Current Behavior and Expected Behavior are required for Defects and Prod Incidents",
   path: ["currentBehavior"],
 });
 
@@ -423,11 +423,64 @@ export function EditItemModal({
               )}
             />
 
-            {/* Bug-specific fields - show right after title for BUG type */}
+            {/* Description field - show right after title for non-TASK types */}
+            {workItem?.type !== 'TASK' && (
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Description
+                      {['STORY', 'BUG'].includes(workItem?.type || '') && <span className="text-red-500"> *</span>}
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter description"
+                        value={field.value || ""}
+                        rows={3}
+                      />
+                    </FormControl>
+                    {['STORY', 'BUG'].includes(workItem?.type || '') && (
+                      <FormDescription>
+                        Required: Provide clear details about what work needs to be completed.
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Bug-specific fields - show right after description for BUG type */}
             {workItem?.type === "BUG" && (
               <div className="space-y-4 bg-blue-50 p-4 rounded border border-blue-200" key={`bug-fields-${workItem?.id}`}>
                 {console.log("Rendering bug fields section for workItem:", workItem?.id)}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Priority <span className="text-red-500">*</span></FormLabel>
+                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="LOW">Low</SelectItem>
+                            <SelectItem value="MEDIUM">Medium</SelectItem>
+                            <SelectItem value="HIGH">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="bugType"
@@ -450,107 +503,69 @@ export function EditItemModal({
                       </FormItem>
                     )}
                   />
+                </div>
 
-                  <FormField
-                    control={form.control}
-                    name="severity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Severity <span className="text-red-500">*</span></FormLabel>
-                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <FormField
+                  control={form.control}
+                  name="severity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Severity <span className="text-red-500">*</span></FormLabel>
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="LOW">Low</SelectItem>
+                          <SelectItem value="MEDIUM">Medium</SelectItem>
+                          <SelectItem value="HIGH">High</SelectItem>
+                          <SelectItem value="CRITICAL">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {['DEFECT', 'PROD_INCIDENT'].includes(watchedBugType || '') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-blue-200">
+                    <FormField
+                      control={form.control}
+                      name="currentBehavior"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">Current Behavior <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
+                            <Textarea {...field} placeholder="What is happening?" rows={2} className="text-sm" value={watchedCurrentBehavior || ""} onChange={(e) => { field.onChange(e); }} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="LOW">Low</SelectItem>
-                            <SelectItem value="MEDIUM">Medium</SelectItem>
-                            <SelectItem value="HIGH">High</SelectItem>
-                            <SelectItem value="CRITICAL">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="referenceUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Ref URL (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://..." className="h-9 text-sm" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-blue-200">
-                  <FormField
-                    control={form.control}
-                    name="currentBehavior"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Current Behavior {['DEFECT', 'PROD_INCIDENT'].includes(watchedBugType || '') && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="What is happening?" rows={2} className="text-sm" value={watchedCurrentBehavior || ""} onChange={(e) => { field.onChange(e); }} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="expectedBehavior"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Expected Behavior {['DEFECT', 'PROD_INCIDENT'].includes(watchedBugType || '') && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="What should happen?" rows={2} className="text-sm" value={watchedExpectedBehavior || ""} onChange={(e) => { field.onChange(e); }} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                    <FormField
+                      control={form.control}
+                      name="expectedBehavior"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">Expected Behavior <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="What should happen?" rows={2} className="text-sm" value={watchedExpectedBehavior || ""} onChange={(e) => { field.onChange(e); }} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
             {workItem?.type !== 'TASK' && (
               <>
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Description
-                        {['STORY', 'BUG'].includes(workItem.type) && <span className="text-red-500"> *</span>}
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Enter description"
-                          value={field.value || ""}
-                          rows={3}
-                        />
-                      </FormControl>
-                      {['STORY', 'BUG'].includes(workItem.type) && (
-                        <FormDescription>
-                          Required: Provide clear details about what work needs to be completed.
-                        </FormDescription>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Screenshot field immediately after description for BUG */}
+                {/* Screenshot field immediately after bug section for BUG */}
                 {workItem?.type === 'BUG' && (
                   <FormItem>
                     <FormLabel>Screenshot (Optional)</FormLabel>
@@ -812,38 +827,6 @@ export function EditItemModal({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {workItem.type !== 'TASK' && (
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority <span className="text-red-500">*</span></FormLabel>
-                      <Select
-                        value={field.value || "MEDIUM"}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="LOW">Low</SelectItem>
-                          <SelectItem value="MEDIUM">Medium</SelectItem>
-                          <SelectItem value="HIGH">High</SelectItem>
-                          <SelectItem value="CRITICAL">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select work item priority level (required for all types)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -900,6 +883,23 @@ export function EditItemModal({
                 />
               </div>
             </div>
+
+            {/* Ref URL field - show for BUG type after Actual Hours */}
+            {workItem?.type === "BUG" && (
+              <FormField
+                control={form.control}
+                name="referenceUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Ref URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="https://..." />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Show date fields for Epics, Features, and Stories */}
             {(workItem.type === "EPIC" || workItem.type === "FEATURE" || workItem.type === "STORY") && (

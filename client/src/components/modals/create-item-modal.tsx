@@ -524,105 +524,7 @@ export function CreateItemModal({
               )}
             />
 
-            {/* Bug-specific fields - show right after title for BUG type */}
-            {selectedType === "BUG" && (
-              <div className="space-y-4 bg-blue-50 p-4 rounded border border-blue-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="bugType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Bug Type <span className="text-red-500">*</span></FormLabel>
-                        <Select value={field.value} onValueChange={handleBugTypeChange}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="BUG">Bug (Low)</SelectItem>
-                            <SelectItem value="DEFECT">Defect (Medium)</SelectItem>
-                            <SelectItem value="PROD_INCIDENT">Prod Incident (High)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="severity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Severity <span className="text-red-500">*</span></FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="LOW">Low</SelectItem>
-                            <SelectItem value="MEDIUM">Medium</SelectItem>
-                            <SelectItem value="HIGH">High</SelectItem>
-                            <SelectItem value="CRITICAL">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="referenceUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Ref URL (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://..." value={field.value || ""} className="h-9 text-sm" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-blue-200">
-                  <FormField
-                    control={form.control}
-                    name="currentBehavior"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Current Behavior {['DEFECT', 'PROD_INCIDENT'].includes(bugType) && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="What is happening?" rows={2} className="text-sm" value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="expectedBehavior"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm">Expected Behavior {['DEFECT', 'PROD_INCIDENT'].includes(bugType) && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="What should happen?" rows={2} className="text-sm" value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Hide description field for TASK type - Tasks are meant to be simple, actionable items with self-explanatory titles */}
+            {/* Description field - show right after title for all non-TASK types */}
             {selectedType !== 'TASK' && (
               <FormField
                 control={form.control}
@@ -650,6 +552,115 @@ export function CreateItemModal({
                   </FormItem>
                 )}
               />
+            )}
+
+            {/* Bug-specific fields - show right after description for BUG type */}
+            {selectedType === "BUG" && (
+              <div className="space-y-4 bg-blue-50 p-4 rounded border border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Priority <span className="text-red-500">*</span></FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="LOW">Low</SelectItem>
+                            <SelectItem value="MEDIUM">Medium</SelectItem>
+                            <SelectItem value="HIGH">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="bugType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Bug Type <span className="text-red-500">*</span></FormLabel>
+                        <Select value={field.value} onValueChange={handleBugTypeChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="BUG">Bug (Low)</SelectItem>
+                            <SelectItem value="DEFECT">Defect (Medium)</SelectItem>
+                            <SelectItem value="PROD_INCIDENT">Prod Incident (High)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="severity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Severity <span className="text-red-500">*</span></FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="LOW">Low</SelectItem>
+                          <SelectItem value="MEDIUM">Medium</SelectItem>
+                          <SelectItem value="HIGH">High</SelectItem>
+                          <SelectItem value="CRITICAL">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {['DEFECT', 'PROD_INCIDENT'].includes(bugType) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-blue-200">
+                    <FormField
+                      control={form.control}
+                      name="currentBehavior"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">Current Behavior <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="What is happening?" rows={2} className="text-sm" value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="expectedBehavior"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">Expected Behavior <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="What should happen?" rows={2} className="text-sm" value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Tags field - only show for Stories */}
@@ -931,38 +942,6 @@ export function CreateItemModal({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {selectedType !== 'TASK' && (
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority <span className="text-red-500">*</span></FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="LOW">Low</SelectItem>
-                          <SelectItem value="MEDIUM">Medium</SelectItem>
-                          <SelectItem value="HIGH">High</SelectItem>
-                          <SelectItem value="CRITICAL">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select work item priority level (required for all types)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -1003,6 +982,23 @@ export function CreateItemModal({
                 />
               </div>
             </div>
+
+            {/* Ref URL field - show for BUG type after Actual Hours */}
+            {selectedType === "BUG" && (
+              <FormField
+                control={form.control}
+                name="referenceUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Ref URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="https://..." value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* GitHub URL field - only for EPICs */}
             {selectedType === "EPIC" && (

@@ -220,7 +220,7 @@ export default function DailyStandup() {
                 <MultiSelect
                   value={standupAssigneeFilter}
                   onChange={setStandupAssigneeFilter}
-                  options={users.map(u => ({ value: u.id.toString(), label: u.fullName }))}
+                  options={users.filter(u => u.isActive).map(u => ({ value: u.id.toString(), label: u.fullName }))}
                   placeholder="All Assignees"
                   maxDisplay={1}
                 />

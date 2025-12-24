@@ -196,7 +196,7 @@ function getTeamMembers($conn, $teamId) {
             SELECT tm.*, u.username, u.email, u.full_name, u.avatar_url 
             FROM team_members tm 
             JOIN users u ON tm.user_id = u.id 
-            WHERE tm.team_id = ?
+            WHERE tm.team_id = ? AND u.is_active = 1
         ");
         $stmt->execute([$teamId]);
         $members = $stmt->fetchAll();
@@ -250,6 +250,16 @@ function addTeamMember($conn, $teamId) {
     if (!isset($input['userId'])) {
         http_response_code(400);
         echo json_encode(['message' => 'User ID is required']);
+        return;
+    }
+
+    // Check if user is active
+    $userCheckStmt = $conn->prepare("SELECT is_active FROM users WHERE id = ?");
+    $userCheckStmt->execute([$input['userId']]);
+    $userRow = $userCheckStmt->fetch();
+    if (!$userRow || !$userRow['is_active']) {
+        http_response_code(400);
+        echo json_encode(['message' => 'Cannot add inactive user as team member']);
         return;
     }
     
