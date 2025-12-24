@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Fix Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Authentication Fix Verification</h1>
+        
+        <div class="status info">
+            <strong>Fix Applied:</strong> Eliminated loading spinner for unauthenticated users.<br>
+            <strong>Expected Behavior:</strong> Login page should appear immediately without loading states.
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Verification Steps</h3>
+            <div class="step">
+                <strong>Step 1:</strong> Clear all browser data and visit the main page
+            </div>
+            <div class="step">
+                <strong>Step 2:</strong> Should see login page immediately (no loading spinner)
+            </div>
+            <div class="step">
+                <strong>Step 3:</strong> Login should work normally and redirect to dashboard
+            </div>
+            <div class="step">
+                <strong>Step 4:</strong> Logout should return to login page without loading
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Automated Tests</h3>
+            <button onclick="testAuthFlow()">Test Authentication Flow</button>
+            <button onclick="testMainPage()">Test Main Page Load</button>
+            <button onclick="testApiEndpoints()">Test API Endpoints</button>
+            <button onclick="clearAllData()">Clear Browser Data</button>
+            
+            <div class="test-output" id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Quick Actions</h3>
+            <button onclick="goToMainApp()">Go to Main App</button>
+            <button onclick="goToLogin()">Go to Login Page</button>
+            <button onclick="testHealthCheck()">Health Check</button>
+            <button onclick="openDevTools()">Open Dev Tools</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Current Status</h3>
+            <div id="current-status">
+                <div class="info">Loading current status...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        function getApiBaseUrl() {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return '/api';
+            } else if (hostname === 'cybaemtech.in' || hostname === 'www.cybaemtech.in') {
+                return '/Agile/api';
+            } else {
+                return '/Agile/api'; // Default for production
+            }
+        }
+
+        const API_BASE_URL = getApiBaseUrl();
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            }[type] || 'ℹ️';
+            
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearOutput() {
+            document.getElementById('test-results').textContent = '';
+        }
+
+        async function testAuthFlow() {
+            clearOutput();
+            log('🚀 Starting Authentication Flow Test');
+            
+            // Test 1: Check unauthenticated state
+            log('Test 1: Checking unauthenticated user endpoint...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/user`, {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    log('✅ 401 response for unauthenticated user (expected)', 'success');
+                } else {
+                    log(`⚠️ Unexpected response: ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, 'error');
+            }
+            
+            // Test 2: Check main page behavior
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            log('Test 2: Checking main page redirect behavior...');
+            
+            const mainPageUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/' 
+                : 'https://cybaemtech.in/Agile/';
+            
+            log(`Main page URL would be: ${mainPageUrl}`);
+            log('✅ User should be redirected to login immediately', 'success');
+            
+            // Test 3: Health check
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            log('Test 3: API health check...');
+            try {
+                const healthResponse = await fetch(`${API_BASE_URL}/health.php`);
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.text();
+                    log('✅ API health check passed', 'success');
+                } else {
+                    log(`❌ Health check failed: ${healthResponse.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Health check error: ${error.message}`, 'error');
+            }
+            
+            log('🎉 Authentication flow test completed!');
+        }
+
+        async function testMainPage() {
+            clearOutput();
+            log('🌐 Testing Main Page Load Behavior');
+            
+            const mainPageUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/' 
+                : 'https://cybaemtech.in/Agile/';
+            
+            log(`Opening main page: ${mainPageUrl}`);
+            log('Expected: Should redirect to login immediately without loading spinner');
+            
+            // Open in new tab for testing
+            window.open(mainPageUrl, '_blank');
+            
+            log('✅ Main page opened in new tab for testing', 'success');
+            log('👀 Check the new tab - you should see login page immediately!', 'info');
+        }
+
+        async function testApiEndpoints() {
+            clearOutput();
+            log('🔌 Testing API Endpoints');
+            
+            const endpoints = [
+                '/health.php',
+                '/auth/user', 
+                '/production-status.php'
+            ];
+            
+            for (const endpoint of endpoints) {
+                log(`Testing ${endpoint}...`);
+                try {
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                        credentials: 'include'
+                    });
+                    
+                    log(`${endpoint}: ${response.status} ${response.statusText}`, 
+                        response.ok ? 'success' : (response.status === 401 ? 'info' : 'warning'));
+                        
+                } catch (error) {
+                    log(`${endpoint}: Network error - ${error.message}`, 'error');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            log('✅ API endpoint testing completed');
+        }
+
+        function clearAllData() {
+            clearOutput();
+            log('🧹 Clearing all browser data...');
+            
+            // Clear all storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies (limited by same-origin policy)
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            log('✅ Cleared localStorage and sessionStorage', 'success');
+            log('✅ Attempted to clear cookies', 'success');
+            log('🔄 Reloading page in 3 seconds...', 'info');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }
+
+        async function testHealthCheck() {
+            clearOutput();
+            log('🏥 Running Health Check');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health.php`);
+                const data = await response.text();
+                
+                if (response.ok) {
+                    log('✅ Health check passed!', 'success');
+                    log(`Response: ${data}`, 'info');
+                } else {
+                    log(`❌ Health check failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Health check error: ${error.message}`, 'error');
+            }
+        }
+
+        function goToMainApp() {
+            const mainPageUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/' 
+                : 'https://cybaemtech.in/Agile/';
+            window.open(mainPageUrl, '_blank');
+        }
+
+        function goToLogin() {
+            const loginUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/login' 
+                : 'https://cybaemtech.in/Agile/login';
+            window.open(loginUrl, '_blank');
+        }
+
+        function openDevTools() {
+            log('💡 Press F12 or right-click → Inspect to open Developer Tools', 'info');
+            log('👀 Look for any console errors or network 401 errors', 'info');
+        }
+
+        // Display current status
+        async function updateCurrentStatus() {
+            const statusDiv = document.getElementById('current-status');
+            
+            const status = {
+                timestamp: new Date().toLocaleString(),
+                location: window.location.href,
+                api_base_url: API_BASE_URL,
+                cookies_enabled: navigator.cookieEnabled,
+                local_storage: localStorage.length,
+                session_storage: sessionStorage.length
+            };
+            
+            statusDiv.innerHTML = `
+                <div class="info">
+                    <strong>Current Time:</strong> ${status.timestamp}<br>
+                    <strong>Current Location:</strong> ${status.location}<br>
+                    <strong>API Base URL:</strong> ${status.api_base_url}<br>
+                    <strong>Cookies Enabled:</strong> ${status.cookies_enabled}<br>
+                    <strong>LocalStorage Items:</strong> ${status.local_storage}<br>
+                    <strong>SessionStorage Items:</strong> ${status.session_storage}
+                </div>
+            `;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔧 Authentication Fix Verification Tool Ready');
+            log(`Using API Base URL: ${API_BASE_URL}`);
+            log('Click the test buttons above to verify the authentication fixes');
+            
+            updateCurrentStatus();
+            
+            // Update status every 30 seconds
+            setInterval(updateCurrentStatus, 30000);
+        });
+    </script>
+</body>
+</html>

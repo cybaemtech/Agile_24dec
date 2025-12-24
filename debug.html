@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agile Project Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Agile Project Debug Tool</h1>
+    
+    <div id="results"></div>
+
+    <script>
+    async function runDiagnostics() {
+        const results = document.getElementById('results');
+        
+        // Test 1: Basic environment check
+        results.innerHTML += `
+            <div class="debug-section info">
+                <h3>Environment Information</h3>
+                <pre>
+URL: ${window.location.href}
+Hostname: ${window.location.hostname}
+Pathname: ${window.location.pathname}
+Protocol: ${window.location.protocol}
+Port: ${window.location.port}
+User Agent: ${navigator.userAgent}
+                </pre>
+            </div>
+        `;
+
+        // Test 2: API Base URL detection
+        const getApiBaseUrl = () => {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return '/api';
+            }
+            if (window.location.hostname === 'cybaemtech.in' || window.location.hostname === 'www.cybaemtech.in') {
+                return '/Agile/api';
+            }
+            if (window.location.pathname.startsWith('/Agile/') || window.location.pathname === '/Agile') {
+                return '/Agile/api';
+            }
+            if (window.location.port === '' && window.location.protocol === 'https:') {
+                return '/Agile/api';
+            }
+            return '/api';
+        };
+
+        const apiBaseUrl = getApiBaseUrl();
+        results.innerHTML += `
+            <div class="debug-section info">
+                <h3>API Configuration</h3>
+                <pre>Detected API Base URL: ${apiBaseUrl}</pre>
+            </div>
+        `;
+
+        // Test 3: Test API connectivity
+        try {
+            const testResponse = await fetch(`${apiBaseUrl}/test-api`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (testResponse.ok) {
+                const data = await testResponse.json();
+                results.innerHTML += `
+                    <div class="debug-section success">
+                        <h3>API Test Endpoint - SUCCESS</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                results.innerHTML += `
+                    <div class="debug-section error">
+                        <h3>API Test Endpoint - FAILED</h3>
+                        <pre>Status: ${testResponse.status} ${testResponse.statusText}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>API Test Endpoint - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+
+        // Test 4: Test authentication debug endpoint
+        try {
+            const authDebugResponse = await fetch(`${apiBaseUrl}/auth-debug`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (authDebugResponse.ok) {
+                const authDebugData = await authDebugResponse.json();
+                results.innerHTML += `
+                    <div class="debug-section success">
+                        <h3>Auth Debug Endpoint - SUCCESS</h3>
+                        <pre>${JSON.stringify(authDebugData, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                results.innerHTML += `
+                    <div class="debug-section error">
+                        <h3>Auth Debug Endpoint - FAILED</h3>
+                        <pre>Status: ${authDebugResponse.status} ${authDebugResponse.statusText}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>Auth Debug Endpoint - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+
+        // Test 5: Test user setup endpoint
+        try {
+            const setupResponse = await fetch(`${apiBaseUrl}/setup-users`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (setupResponse.ok) {
+                const setupData = await setupResponse.json();
+                results.innerHTML += `
+                    <div class="debug-section ${setupData.message.includes('created') ? 'success' : 'info'}">
+                        <h3>User Setup Endpoint - SUCCESS</h3>
+                        <pre>${JSON.stringify(setupData, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                results.innerHTML += `
+                    <div class="debug-section error">
+                        <h3>User Setup Endpoint - FAILED</h3>
+                        <pre>Status: ${setupResponse.status} ${setupResponse.statusText}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>User Setup Endpoint - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+
+        // Test 6: Test authentication endpoint
+        try {
+            const authResponse = await fetch(`${apiBaseUrl}/auth/user`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (authResponse.ok) {
+                const userData = await authResponse.json();
+                results.innerHTML += `
+                    <div class="debug-section success">
+                        <h3>Auth Endpoint - SUCCESS</h3>
+                        <pre>${JSON.stringify(userData, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                const errorText = await authResponse.text();
+                results.innerHTML += `
+                    <div class="debug-section error">
+                        <h3>Auth Endpoint - FAILED</h3>
+                        <pre>Status: ${authResponse.status} ${authResponse.statusText}
+Error: ${errorText}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>Auth Endpoint - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+
+        // Test 7: Test projects endpoint
+        try {
+            const projectsResponse = await fetch(`${apiBaseUrl}/projects`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (projectsResponse.ok) {
+                const projectsData = await projectsResponse.json();
+                results.innerHTML += `
+                    <div class="debug-section success">
+                        <h3>Projects Endpoint - SUCCESS</h3>
+                        <pre>${JSON.stringify(projectsData.slice(0, 2), null, 2)}${projectsData.length > 2 ? '\n... and ' + (projectsData.length - 2) + ' more projects' : ''}</pre>
+                    </div>
+                `;
+            } else {
+                results.innerHTML += `
+                    <div class="debug-section error">
+                        <h3>Projects Endpoint - FAILED</h3>
+                        <pre>Status: ${projectsResponse.status} ${projectsResponse.statusText}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>Projects Endpoint - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+
+        // Test 8: Check if React app files are accessible
+        try {
+            const assetsTest = await fetch(`${window.location.pathname.replace(/\/[^\/]*$/, '')}/assets/index-D2bSDwFc.js`);
+            results.innerHTML += `
+                <div class="debug-section ${assetsTest.ok ? 'success' : 'error'}">
+                    <h3>React App Assets - ${assetsTest.ok ? 'SUCCESS' : 'FAILED'}</h3>
+                    <pre>JavaScript bundle status: ${assetsTest.status}</pre>
+                </div>
+            `;
+        } catch (error) {
+            results.innerHTML += `
+                <div class="debug-section error">
+                    <h3>React App Assets - ERROR</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+    }
+
+    runDiagnostics();
+    </script>
+</body>
+</html>

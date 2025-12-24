@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login - Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Simple Login - Debug Tool</h1>
+    
+    <div id="userSetup" class="result info">
+        <h3>Setting up default user...</h3>
+        <div id="setupResult">Loading...</div>
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="admin@example.com" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="admin123" required>
+        </div>
+        <button type="submit">Simple Login</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const getApiBaseUrl = () => {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return '/api';
+            }
+            if (window.location.hostname === 'cybaemtech.in' || window.location.hostname === 'www.cybaemtech.in') {
+                return '/Agile/api';
+            }
+            if (window.location.pathname.startsWith('/Agile/') || window.location.pathname === '/Agile') {
+                return '/Agile/api';
+            }
+            if (window.location.port === '' && window.location.protocol === 'https:') {
+                return '/Agile/api';
+            }
+            return '/api';
+        };
+
+        const apiBaseUrl = getApiBaseUrl();
+
+        // Setup default user on page load
+        async function setupUser() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/setup-users`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                document.getElementById('setupResult').innerHTML = `
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('setupResult').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Handle login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                console.log('Attempting login with:', { email, apiBaseUrl });
+                
+                const response = await fetch(`${apiBaseUrl}/simple-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="result success">
+                            <h3>Login Successful!</h3>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                            <button onclick="testAuthEndpoint()">Test Auth Endpoint</button>
+                            <button onclick="window.location.href='/Agile/'">Go to Main App</button>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="result error">
+                            <h3>Login Failed</h3>
+                            <pre>Status: ${response.status}
+${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="result error">
+                        <h3>Error</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        });
+
+        // Test auth endpoint after login
+        async function testAuthEndpoint() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/auth/user`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += `
+                    <div class="result ${response.ok ? 'success' : 'error'}">
+                        <h3>Auth Test Result</h3>
+                        <pre>Status: ${response.status}
+${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML += `
+                    <div class="result error">
+                        <h3>Auth Test Error</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Setup user on page load
+        setupUser();
+    </script>
+</body>
+</html>

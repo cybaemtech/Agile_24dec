@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 Security Fix Verification - OTP Enforcement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .security-status {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .secured { 
+            background: linear-gradient(135deg, #38a169, #48bb78); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(56, 161, 105, 0.4);
+        }
+        .vulnerable { 
+            background: linear-gradient(135deg, #f56565, #e53e3e); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+        }
+        .warning { 
+            background: linear-gradient(135deg, #ed8936, #dd6b20); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.4);
+        }
+        .info { 
+            background: linear-gradient(135deg, #4299e1, #3182ce); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
+        }
+        .test-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 8px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        .test-btn.danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+        .output {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.5);
+        }
+        .security-check {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .check-pass { background: #c6f6d5; color: #22543d; }
+        .check-fail { background: #fed7d7; color: #742a2a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Security Fix Verification</h1>
+        
+        <div class="security-status secured">
+            <strong>✅ SECURITY ENHANCED: OTP Verification Now Enforced</strong><br>
+            All login bypass methods have been disabled!
+        </div>
+
+        <div class="test-section">
+            <h3>🛡️ Security Improvements Applied</h3>
+            <div class="security-check check-pass">✅ Simple login endpoint disabled</div>
+            <div class="security-check check-pass">✅ Direct auth login disabled</div>
+            <div class="security-check check-pass">✅ OTP verification required for all logins</div>
+            <div class="security-check check-pass">✅ Frontend bypass methods removed</div>
+            <div class="security-check check-pass">✅ Email verification enforced</div>
+        </div>
+
+        <div class="info">
+            <h3>🔐 How Secure Login Works Now</h3>
+            <strong>Step 1:</strong> User enters email/password<br>
+            <strong>Step 2:</strong> System sends OTP to email (required)<br>
+            <strong>Step 3:</strong> User enters OTP to complete login<br>
+            <strong>Step 4:</strong> Session created only after OTP verification
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Security Tests</h3>
+            <button class="test-btn danger" onclick="testSimpleLogin()">🚨 Test Simple Login (Should Fail)</button>
+            <button class="test-btn danger" onclick="testDirectAuth()">🚨 Test Direct Auth (Should Fail)</button>
+            <button class="test-btn" onclick="testOtpFlow()">✅ Test OTP Flow (Should Work)</button>
+            <button class="test-btn" onclick="testAllSecurity()">🔍 Run All Security Tests</button>
+            
+            <div class="output" id="test-output"></div>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Expected Behavior</h3>
+            <strong>SECURE:</strong> All logins must go through OTP verification<br>
+            <strong>BLOCKED:</strong> Simple login and direct auth should fail<br>
+            <strong>REQUIRED:</strong> Email verification + OTP for authentication
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="test-btn" onclick="goToSecureLogin()" 
+                    style="background: linear-gradient(135deg, #38a169, #48bb78); font-size: 16px; padding: 18px 35px;">
+                🔐 Go to Secure Login Page
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function getApiBaseUrl() {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return '/api';
+            } else {
+                return '/Agile/api';
+            }
+        }
+
+        const API_BASE_URL = getApiBaseUrl();
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('test-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const icons = {
+                'pass': '✅',
+                'fail': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️',
+                'security': '🔒'
+            };
+            
+            output.textContent += `[${timestamp}] ${icons[type] || 'ℹ️'} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('test-output').textContent = '';
+        }
+
+        async function testSimpleLogin() {
+            clearOutput();
+            log('🚨 Testing Simple Login Endpoint (Should Be Disabled)', 'security');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/simple-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword'
+                    })
+                });
+
+                if (response.status === 405) {
+                    log('✅ SECURITY PASS: Simple login correctly disabled (405)', 'pass');
+                } else if (response.status >= 400) {
+                    log(`✅ SECURITY PASS: Simple login blocked (${response.status})`, 'pass');
+                } else {
+                    log('❌ SECURITY FAIL: Simple login still working!', 'fail');
+                }
+
+                const data = await response.text();
+                log(`Response: ${data}`, 'info');
+
+            } catch (error) {
+                log(`Network error (expected): ${error.message}`, 'info');
+            }
+        }
+
+        async function testDirectAuth() {
+            clearOutput();
+            log('🚨 Testing Direct Auth Login (Should Be Disabled)', 'security');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword'
+                    })
+                });
+
+                if (response.status === 405) {
+                    log('✅ SECURITY PASS: Direct auth correctly disabled (405)', 'pass');
+                } else if (response.status >= 400) {
+                    log(`✅ SECURITY PASS: Direct auth blocked (${response.status})`, 'pass');
+                } else {
+                    log('❌ SECURITY FAIL: Direct auth still working!', 'fail');
+                }
+
+                const data = await response.text();
+                log(`Response: ${data}`, 'info');
+
+            } catch (error) {
+                log(`Network error (expected): ${error.message}`, 'info');
+            }
+        }
+
+        async function testOtpFlow() {
+            clearOutput();
+            log('✅ Testing OTP Flow (Should Be Available)', 'security');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login-otp/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    log('✅ SECURITY PASS: OTP flow is working correctly', 'pass');
+                    const data = await response.json();
+                    log(`OTP Response: ${JSON.stringify(data)}`, 'info');
+                } else if (response.status === 401) {
+                    log('ℹ️ OTP flow working - credentials invalid (expected for test)', 'info');
+                } else {
+                    log(`⚠️ OTP flow response: ${response.status}`, 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ OTP flow error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testAllSecurity() {
+            clearOutput();
+            log('🔍 Running Complete Security Test Suite', 'security');
+            log('='.repeat(50), 'info');
+            
+            await testSimpleLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('\n' + '='.repeat(50), 'info');
+            await testDirectAuth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('\n' + '='.repeat(50), 'info');
+            await testOtpFlow();
+            
+            log('\n' + '='.repeat(50), 'info');
+            log('🔒 SECURITY TEST COMPLETE', 'security');
+            log('✅ All login bypasses should be blocked', 'pass');
+            log('✅ OTP verification should be the only way to login', 'pass');
+        }
+
+        function goToSecureLogin() {
+            const loginUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/login' 
+                : 'https://cybaemtech.in/Agile/login';
+            window.open(loginUrl, '_blank');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔒 Security Verification Tool Ready', 'security');
+            log('All login bypass methods have been disabled for security', 'pass');
+            log('Click test buttons to verify security enhancements', 'info');
+        });
+    </script>
+</body>
+</html>

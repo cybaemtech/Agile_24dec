@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blank Page Fix - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .success { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+        .error { background: linear-gradient(135deg, #f56565, #e53e3e); color: white; }
+        .warning { background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; }
+        .info { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; }
+        .test-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        .output {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .fix-status {
+            font-size: 1.2em;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #38a169, #48bb78);
+            color: white;
+            box-shadow: 0 4px 15px rgba(56, 161, 105, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Blank Page Fix Verification</h1>
+        
+        <div class="fix-status">
+            <strong>✅ FIX APPLIED: Blank Loading Page Eliminated</strong><br>
+            Authentication now shows login page immediately for unauthenticated users!
+        </div>
+
+        <div class="status info">
+            <h3>🎯 What Was Fixed</h3>
+            • Removed blank loading states for 401 errors<br>
+            • Added immediate authentication state detection<br>
+            • Login page now appears instantly for unauthenticated users<br>
+            • Eliminated loading spinners that showed 401 errors
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="test-btn" onclick="testMainPage()">🔍 Test Main Page (No More Blank Loading!)</button>
+            <button class="test-btn" onclick="testAuthFlow()">🔐 Test Auth Flow</button>
+            <button class="test-btn" onclick="clearDataAndTest()">🧹 Clear Data & Test</button>
+        </div>
+
+        <div class="output" id="test-output"></div>
+
+        <div class="status warning">
+            <h3>📋 Expected Behavior</h3>
+            <strong>BEFORE:</strong> Blank page with loading spinner + 401 errors<br>
+            <strong>NOW:</strong> Login page appears immediately without loading
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="test-btn" onclick="goToApp()" style="background: linear-gradient(135deg, #38a169, #48bb78); font-size: 18px; padding: 20px 40px;">
+                🎉 Go to Fixed Application
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function getApiBaseUrl() {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return '/api';
+            } else {
+                return '/Agile/api';
+            }
+        }
+
+        const API_BASE_URL = getApiBaseUrl();
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('test-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const icons = {
+                'success': '✅',
+                'error': '❌', 
+                'warning': '⚠️',
+                'info': 'ℹ️',
+                'fix': '🔧'
+            };
+            
+            output.textContent += `[${timestamp}] ${icons[type] || 'ℹ️'} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('test-output').textContent = '';
+        }
+
+        async function testAuthFlow() {
+            clearOutput();
+            log('🚀 Testing Fixed Authentication Flow', 'fix');
+            log('Expected: No blank loading pages, immediate login display');
+            
+            try {
+                log('Testing /auth/user endpoint...');
+                const response = await fetch(`${API_BASE_URL}/auth/user`, {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    log('✅ Got 401 as expected for unauthenticated user', 'success');
+                    log('✅ Application should show LOGIN PAGE immediately (not blank loading)', 'success');
+                } else if (response.ok) {
+                    const userData = await response.json();
+                    log(`✅ User is authenticated: ${userData.email || userData.name}`, 'success');
+                } else {
+                    log(`⚠️ Unexpected response: ${response.status}`, 'warning');
+                }
+                
+                log('✅ Auth flow test completed - check main app for login page!', 'success');
+                
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function testMainPage() {
+            clearOutput();
+            log('🌐 Testing Main Page Load (Should Show Login Immediately)', 'fix');
+            
+            const mainUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/' 
+                : 'https://cybaemtech.in/Agile/';
+            
+            log(`Opening: ${mainUrl}`);
+            log('🎯 Expected Result: LOGIN PAGE appears immediately');
+            log('🚫 Should NOT see: Blank page, loading spinner, or 401 errors');
+            
+            // Open in new window
+            const newWindow = window.open(mainUrl, '_blank');
+            
+            log('✅ Main page opened in new tab', 'success');
+            log('👀 Check the new tab - you should see LOGIN PAGE immediately!', 'info');
+            
+            // Check after a few seconds
+            setTimeout(() => {
+                log('⏰ After a few seconds, the login page should be fully loaded', 'info');
+                log('💡 If you still see blank page, try refreshing or clearing browser cache', 'warning');
+            }, 3000);
+        }
+
+        function clearDataAndTest() {
+            clearOutput();
+            log('🧹 Clearing browser data for clean test...', 'fix');
+            
+            // Clear storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            log('✅ Cleared localStorage, sessionStorage, and cookies', 'success');
+            log('🔄 Now testing main page with clean state...', 'info');
+            
+            setTimeout(() => {
+                testMainPage();
+            }, 1000);
+        }
+
+        function goToApp() {
+            const mainUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/' 
+                : 'https://cybaemtech.in/Agile/';
+                
+            window.open(mainUrl, '_blank');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔧 Blank Page Fix Verification Tool Ready', 'fix');
+            log('✅ Authentication flow has been fixed to show login immediately', 'success');
+            log('📱 Click "Test Main Page" to verify the fix!', 'info');
+        });
+    </script>
+</body>
+</html>

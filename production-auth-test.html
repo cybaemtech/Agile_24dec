@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .url-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Production Authentication Test</h1>
+    
+    <div class="url-info">
+        <h3>Current URL Information:</h3>
+        <div id="url-info"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>Authentication Flow Test</h3>
+        <p>This tool tests the complete authentication flow in production environment.</p>
+        <button onclick="testFullAuthFlow()">Test Full Authentication Flow</button>
+        <button onclick="testUserEndpoint()">Test User Endpoint</button>
+        <button onclick="testSimpleLogin()">Test Simple Login</button>
+        <button onclick="clearStorage()">Clear All Storage</button>
+        <div class="output" id="auth-output"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Manual Login Test</h3>
+        <form id="login-form">
+            <div>
+                <input type="email" id="test-email" placeholder="Email" value="admin@test.com" style="margin: 5px; padding: 10px; width: 200px;">
+            </div>
+            <div>
+                <input type="password" id="test-password" placeholder="Password" value="admin123" style="margin: 5px; padding: 10px; width: 200px;">
+            </div>
+            <button type="submit" style="margin: 5px; padding: 10px 20px;">Login</button>
+        </form>
+        <div class="output" id="login-output"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Session Information</h3>
+        <button onclick="getSessionInfo()">Get Session Info</button>
+        <button onclick="testCookies()">Test Cookies</button>
+        <div class="output" id="session-output"></div>
+    </div>
+
+    <script>
+        // Detect API base URL
+        function getApiBaseUrl() {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:8000/api';
+            } else {
+                return '/api';
+            }
+        }
+
+        const API_BASE_URL = getApiBaseUrl();
+
+        function log(message, elementId = 'auth-output') {
+            const output = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearOutput(elementId = 'auth-output') {
+            document.getElementById(elementId).textContent = '';
+        }
+
+        // Display current URL information
+        function displayUrlInfo() {
+            const info = document.getElementById('url-info');
+            info.innerHTML = `
+                <strong>Current URL:</strong> ${window.location.href}<br>
+                <strong>Hostname:</strong> ${window.location.hostname}<br>
+                <strong>API Base URL:</strong> ${API_BASE_URL}<br>
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>Cookies Enabled:</strong> ${navigator.cookieEnabled}
+            `;
+        }
+
+        async function testUserEndpoint() {
+            clearOutput();
+            log('Testing /auth/user endpoint...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/user`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                log(`Response status: ${response.status}`);
+                log(`Response headers: ${JSON.stringify([...response.headers.entries()])}`);
+                
+                const responseText = await response.text();
+                log(`Response body: ${responseText}`);
+                
+                if (response.ok) {
+                    try {
+                        const userData = JSON.parse(responseText);
+                        if (userData && userData.id) {
+                            log('✅ User is authenticated');
+                            log(`User data: ${JSON.stringify(userData, null, 2)}`);
+                        } else {
+                            log('❌ Invalid user data received');
+                        }
+                    } catch (e) {
+                        log('❌ Failed to parse JSON response');
+                    }
+                } else {
+                    log('❌ User not authenticated or error occurred');
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function testSimpleLogin() {
+            clearOutput();
+            log('Testing simple login endpoint...');
+            
+            const credentials = {
+                email: 'admin@test.com',
+                password: 'admin123'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/simple-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(credentials)
+                });
+                
+                log(`Response status: ${response.status}`);
+                
+                const responseText = await response.text();
+                log(`Response body: ${responseText}`);
+                
+                if (response.ok) {
+                    log('✅ Simple login successful');
+                    
+                    // Test user endpoint after login
+                    setTimeout(() => testUserEndpoint(), 1000);
+                } else {
+                    log('❌ Simple login failed');
+                }
+            } catch (error) {
+                log(`❌ Network error during simple login: ${error.message}`);
+            }
+        }
+
+        async function testFullAuthFlow() {
+            clearOutput();
+            log('Starting full authentication flow test...');
+            log('Step 1: Testing initial user endpoint...');
+            
+            await testUserEndpoint();
+            
+            setTimeout(async () => {
+                log('\nStep 2: Testing simple login...');
+                await testSimpleLogin();
+            }, 2000);
+        }
+
+        async function getSessionInfo() {
+            clearOutput('session-output');
+            log('Getting session information...', 'session-output');
+            
+            try {
+                // Test session status
+                const response = await fetch(`${API_BASE_URL}/auth/status`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.text();
+                log(`Session status: ${response.status}`, 'session-output');
+                log(`Session response: ${data}`, 'session-output');
+                
+                // Check local/session storage
+                log('\n--- Local Storage ---', 'session-output');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    log(`${key}: ${localStorage.getItem(key)}`, 'session-output');
+                }
+                
+                log('\n--- Session Storage ---', 'session-output');
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    log(`${key}: ${sessionStorage.getItem(key)}`, 'session-output');
+                }
+                
+            } catch (error) {
+                log(`Error getting session info: ${error.message}`, 'session-output');
+            }
+        }
+
+        function testCookies() {
+            clearOutput('session-output');
+            log('Testing cookies...', 'session-output');
+            log(`Document cookies: ${document.cookie}`, 'session-output');
+            log(`Cookies enabled: ${navigator.cookieEnabled}`, 'session-output');
+            
+            // Try to set a test cookie
+            document.cookie = 'test=value; path=/; SameSite=Lax';
+            log(`After setting test cookie: ${document.cookie}`, 'session-output');
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('Cleared all storage');
+            log('Page will reload in 2 seconds...');
+            setTimeout(() => location.reload(), 2000);
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearOutput('login-output');
+            
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            log('Attempting manual login...', 'login-output');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/simple-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const responseText = await response.text();
+                log(`Login response (${response.status}): ${responseText}`, 'login-output');
+                
+                if (response.ok) {
+                    log('✅ Manual login successful!', 'login-output');
+                    log('Testing user endpoint...', 'login-output');
+                    
+                    // Test user endpoint after manual login
+                    setTimeout(async () => {
+                        const userResponse = await fetch(`${API_BASE_URL}/auth/user`, {
+                            credentials: 'include'
+                        });
+                        const userData = await userResponse.text();
+                        log(`User endpoint after login (${userResponse.status}): ${userData}`, 'login-output');
+                    }, 1000);
+                } else {
+                    log('❌ Manual login failed', 'login-output');
+                }
+            } catch (error) {
+                log(`❌ Error during manual login: ${error.message}`, 'login-output');
+            }
+        });
+
+        // Initialize page
+        displayUrlInfo();
+        log('Production authentication test ready');
+        log(`Using API base URL: ${API_BASE_URL}`);
+    </script>
+</body>
+</html>
