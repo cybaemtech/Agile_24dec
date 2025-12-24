@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/data-utils";
 import { apiRequest, apiGet } from "@/lib/api-config";
 import { User, Team, Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { AddTeamMembersModal } from "@/components/modals/add-team-members-modal";
 
 
 // Helper function to determine base path for links
@@ -28,6 +29,7 @@ const getBasePath = () => {
 export default function TeamDetails() {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -230,11 +232,14 @@ export default function TeamDetails() {
               {/* Members Tab */}
               <TabsContent value="members">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl flex items-center">
                       <Users className="h-5 w-5 mr-2" />
                       Team Members
                     </CardTitle>
+                    <Button onClick={() => setShowAddMembersModal(true)}>
+                      Add New Member
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {isLoadingMembers ? (
@@ -432,6 +437,12 @@ export default function TeamDetails() {
         </main>
       </div>
 
+      <AddTeamMembersModal
+        isOpen={showAddMembersModal}
+        onClose={() => setShowAddMembersModal(false)}
+        projectId={0}
+        teamId={teamIdNum}
+      />
     </div>
   );
 }
