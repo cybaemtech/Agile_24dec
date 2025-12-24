@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { useEffect } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { TeamCard } from "@/components/teams/team-card";
 import { CreateTeam } from "@/components/teams/create-team";
 import { InviteModal } from "@/components/modals/invite-modal";
+// ...existing code...
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal";
@@ -287,6 +286,7 @@ export default function Teams() {
                     Invite
                   </Button>
                 )}
+                 
                 {isAdminOrScrum && (
                   <Button onClick={() => openModal("createTeam")}>
                     <PlusCircle className="h-4 w-4 mr-2" />
@@ -355,6 +355,9 @@ export default function Teams() {
           return handleTeamCreated(newTeam);
         }}
       />
+
+      {/* Manage Team Modal (settings icon) - only after invite */}
+    
     </div>
   );
 }

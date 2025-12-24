@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,11 @@ interface TeamMember {
 export function TeamMembersModal({ isOpen, onClose, team, onMembersChange, onTeamDeleted }: TeamMembersModalProps) {
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearch, setUserSearch] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const userInputRef = useRef<HTMLInputElement | null>(null);
+  const userDropdownRef = useRef<HTMLDivElement | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("MEMBER");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
@@ -109,6 +114,18 @@ export function TeamMembersModal({ isOpen, onClose, team, onMembersChange, onTea
   // Get users who are not already team members
   const memberUserIds = new Set(teamMembers.map(member => member.userId));
   const availableUsers = allUsers.filter(user => !memberUserIds.has(user.id));
+  const filteredUsers = availableUsers.filter(user => {
+    const q = userSearch.toLowerCase();
+    return (
+      user.fullName?.toLowerCase().includes(q) ||
+      user.email?.toLowerCase().includes(q) ||
+      user.username?.toLowerCase().includes(q)
+    );
+  }).slice(0, 10);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [userSearch, showUserDropdown, filteredUsers.length]);
 
   // Debug logging
   console.log('👥 Debug team members:', {
@@ -345,31 +362,66 @@ export function TeamMembersModal({ isOpen, onClose, team, onMembersChange, onTea
             <div className="border rounded-lg p-4 space-y-4">
               <h3 className="font-medium">Add New Member</h3>
               <div className="flex gap-2">
-                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={
-                      usersLoading ? "Loading users..." : 
-                      usersError ? "Error loading users" :
-                      availableUsers.length === 0 ? "No available users" : 
-                      "Select user"
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usersLoading ? (
-                      <SelectItem value="loading" disabled>Loading users...</SelectItem>
-                    ) : usersError ? (
-                      <SelectItem value="error" disabled>Error: {usersError.message}</SelectItem>
-                    ) : availableUsers.length === 0 ? (
-                      <SelectItem value="empty" disabled>No users available (all users are already team members)</SelectItem>
-                    ) : (
-                      availableUsers.map(user => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.fullName || user.username} ({user.email})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <div className="relative flex-1">
+                  <input
+                    ref={userInputRef}
+                    type="text"
+                    className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={usersLoading ? "Loading users..." : usersError ? "Error loading users" : availableUsers.length === 0 ? "No available users" : "Search user by name or email..."}
+                    value={userSearch}
+                    onChange={e => {
+                      setUserSearch(e.target.value);
+                      setShowUserDropdown(true);
+                    }}
+                    onFocus={() => setShowUserDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowUserDropdown(false), 150)}
+                    onKeyDown={e => {
+                      
+                      if (!showUserDropdown || filteredUsers.length === 0) return;
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setHighlightedIndex(idx => Math.min(idx + 1, filteredUsers.length - 1));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setHighlightedIndex(idx => Math.max(idx - 1, 0));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (filteredUsers[highlightedIndex]) {
+                          setSelectedUserId(filteredUsers[highlightedIndex].id.toString());
+                          setUserSearch(filteredUsers[highlightedIndex].fullName || filteredUsers[highlightedIndex].username || filteredUsers[highlightedIndex].email);
+                          setShowUserDropdown(false);
+                        }
+                      }
+                    }}
+                    disabled={usersLoading || usersError || availableUsers.length === 0}
+                  />
+                  {showUserDropdown && (
+                    <div ref={userDropdownRef} className="absolute left-0 right-0 mt-1 bg-white border rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                      {usersLoading ? (
+                        <div className="p-2 text-sm text-gray-500">Loading users...</div>
+                      ) : usersError ? (
+                        <div className="p-2 text-sm text-red-500">Error loading users</div>
+                      ) : filteredUsers.length === 0 ? (
+                        <div className="p-2 text-sm text-gray-500">No users found</div>
+                      ) : (
+                        filteredUsers.map((user, idx) => (
+                          <button
+                            key={user.id}
+                            type="button"
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-100 ${highlightedIndex === idx ? 'bg-blue-200' : ''}`}
+                            onMouseDown={() => {
+                              setSelectedUserId(user.id.toString());
+                              setUserSearch(user.fullName || user.username || user.email);
+                              setShowUserDropdown(false);
+                            }}
+                          >
+                            {user.fullName || user.username} <span className="text-gray-500">({user.email})</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
                 
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
                   <SelectTrigger className="w-32">

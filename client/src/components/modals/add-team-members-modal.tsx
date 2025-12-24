@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -38,6 +38,8 @@ export function AddTeamMembersModal({
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch all users
@@ -75,6 +77,11 @@ export function AddTeamMembersModal({
       )
       .slice(0, 10); // Limit to 10 items
   }, [searchQuery, users, teamMembers]);
+
+  // Reset highlighted index when dropdown or search changes
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [searchQuery, showDropdown, filteredUsers.length]);
 
   const selectedUserDetails = users.filter((u) => selectedUsers.includes(u.id));
 
@@ -178,6 +185,21 @@ export function AddTeamMembersModal({
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
+                    onKeyDown={(e) => {
+                      if (!showDropdown || filteredUsers.length === 0) return;
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setHighlightedIndex((prev) => Math.min(prev + 1, filteredUsers.length - 1));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (filteredUsers[highlightedIndex]) {
+                          toggleUserSelection(filteredUsers[highlightedIndex].id);
+                        }
+                      }
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -186,16 +208,16 @@ export function AddTeamMembersModal({
 
             {/* User Selection Dropdown */}
             {showDropdown && (
-              <div className="border rounded-lg bg-white shadow-md">
+              <div className="border rounded-lg bg-white shadow-md" ref={dropdownRef}>
                 <ScrollArea className="h-[250px]">
                   {filteredUsers.length > 0 ? (
                     <div className="p-2">
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map((user, idx) => (
                         <button
                           key={user.id}
                           type="button"
                           onClick={() => toggleUserSelection(user.id)}
-                          className="w-full flex items-center justify-between p-3 hover:bg-neutral-100 rounded-lg mb-1 transition"
+                          className={`w-full flex items-center justify-between p-3 rounded-lg mb-1 transition ${highlightedIndex === idx ? 'bg-neutral-200 ring-2 ring-blue-600' : 'hover:bg-neutral-100'}`}
                         >
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <Avatar className="h-8 w-8 flex-shrink-0">
