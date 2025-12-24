@@ -5,12 +5,13 @@ import { Header } from "@/components/layout/header";
 import { TeamCard } from "@/components/teams/team-card";
 import { CreateTeam } from "@/components/teams/create-team";
 import { InviteModal } from "@/components/modals/invite-modal";
+import { ManageTeamModal } from "@/components/modals/manage-team-modal";
 // ...existing code...
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal";
 import { useToast } from "@/hooks/use-toast";
-import { Users, PlusCircle, Search, UserPlus } from "lucide-react";
+import { Users, PlusCircle, Search, UserPlus, Settings } from "lucide-react";
 import { apiGet } from "@/lib/api-config";
 import { Team, User, Project } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
@@ -79,6 +80,7 @@ export default function Teams() {
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showManageTeam, setShowManageTeam] = useState(false);
   const { modalType, modalProps, openModal, closeModal, isOpen } = useModal();
   
   // Add debug logging
@@ -288,6 +290,13 @@ export default function Teams() {
                 )}
                  
                 {isAdminOrScrum && (
+                  <Button variant="outline" onClick={() => setShowManageTeam(true)} title="Manage Team">
+                    <Users className="h-4 w-4 mr-1" />
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+
+                {isAdminOrScrum && (
                   <Button onClick={() => openModal("createTeam")}>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     New Team
@@ -356,7 +365,10 @@ export default function Teams() {
         }}
       />
 
-      {/* Manage Team Modal (settings icon) - only after invite */}
+      <ManageTeamModal
+        isOpen={showManageTeam}
+        onClose={() => setShowManageTeam(false)}
+      />
     
     </div>
   );

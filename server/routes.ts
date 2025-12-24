@@ -113,6 +113,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/users/all', async (_req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      // Remove passwords from response
+      const usersWithoutPasswords = allUsers.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get user by email
   app.get('/api/users/by-email/:email', async (req, res) => {
     try {
@@ -146,6 +161,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching user by email:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch('/api/users/:id', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const user = await storage.updateUser(userId, updates);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't return password in response
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

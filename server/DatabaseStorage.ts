@@ -93,7 +93,22 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     if (!db) return [];
-    return await db.select().from(users).where(eq(users.isActive, true));
+    return await db.select().from(users);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    if (!db) return [];
+    return await db.select().from(users);
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    if (!db) return undefined;
+    await db.update(users).set({
+      ...updates,
+      updatedAt: new Date(),
+    }).where(eq(users.id, id));
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   // Team management methods

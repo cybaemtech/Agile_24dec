@@ -47,12 +47,36 @@ switch ($method . ':' . $path) {
             $userId = $matches[1];
             if ($method === 'GET') {
                 getUser($conn, $userId);
+            } elseif ($method === 'PATCH') {
+                patchUser($conn, $userId);
             }
         } else {
             http_response_code(404);
             echo json_encode(['message' => 'Endpoint not found']);
+		}
+		break;
+}
+
+function patchUser($conn, $userId) {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!isset($input['isActive'])) {
+        http_response_code(400);
+        echo json_encode(['message' => 'isActive is required']);
+        return;
+    }
+    try {
+        $stmt = $conn->prepare("UPDATE users SET is_active = ? WHERE id = ?");
+        $stmt->execute([$input['isActive'] ? 1 : 0, $userId]);
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404);
+            echo json_encode(['message' => 'User not found']);
+            return;
         }
-        break;
+        getUser($conn, $userId);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['message' => 'Internal server error']);
+    }
 }
 
 function getUsers($conn) {
